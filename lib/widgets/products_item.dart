@@ -1,41 +1,62 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shopping_app/models/cart.dart';
 import 'package:shopping_app/screens/product_detail_screen.dart';
 
+import '../models/product.dart';
+
 class ProductItem extends StatelessWidget {
-  final String id;
-  final String title;
-  final String imageUrl;
-  const ProductItem(
-      {super.key,
-      required this.id,
-      required this.title,
-      required this.imageUrl});
+  const ProductItem({super.key});
+
+  // final String id;
+  // final String title;
+  // final String imageUrl;
+  // const ProductItem(
+  //     {super.key,
+  //     required this.id,
+  //     required this.title,
+  // required this.imageUrl});
 
   @override
   Widget build(BuildContext context) {
+    final product = Provider.of<Product>(context, listen: false);
+    final cart = Provider.of<Cart>(context, listen: false);
     return GestureDetector(
       onTap: () {
         Navigator.of(context).pushNamed(
           ProductDetail.routeName,
-          arguments: id,
+          arguments: product.id,
         );
       },
       child: GridTile(
         footer: GridTileBar(
-            backgroundColor: Colors.black54,
-            leading: IconButton(
-              color: Theme.of(context).primaryColor,
-              icon: const Icon(Icons.favorite),
-              onPressed: () {},
+            backgroundColor: Color.fromARGB(134, 34, 33, 33),
+            leading: Consumer<Product>(
+              builder: (context, value, child) => IconButton(
+                color: Colors.orange,
+                icon: Icon(product.isFavourite
+                    ? Icons.favorite
+                    : Icons.favorite_border_outlined),
+                onPressed: () {
+                  product.toogleFavorite();
+                },
+              ),
             ),
-            trailing: const IconButton(
-                onPressed: null, icon: Icon(Icons.shopping_basket)),
+            trailing: IconButton(
+                onPressed: () {
+                  cart.addItem(
+                    product.id,
+                    product.price,
+                    product.title,
+                  );
+                },
+                icon: const Icon(Icons.shopping_basket_outlined)),
             title: Text(
-              title,
+              product.title,
               textAlign: TextAlign.center,
             )),
         child: Image.network(
-          imageUrl,
+          product.imageUrl,
           fit: BoxFit.cover,
         ),
       ),
