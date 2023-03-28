@@ -43,14 +43,26 @@ class ProductItem extends StatelessWidget {
               ),
             ),
             trailing: IconButton(
-                onPressed: () {
-                  cart.addItem(
-                    product.id,
-                    product.price,
-                    product.title,
-                  );
-                },
-                icon: const Icon(Icons.shopping_basket_outlined)),
+              onPressed: () {
+                cart.addItem(
+                  product.id,
+                  product.price,
+                  product.title,
+                );
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Added item to cart!'),
+                    action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {
+                          cart.removeSingleItem(product.id);
+                        }),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.shopping_basket_outlined),
+            ),
             title: Text(
               product.title,
               textAlign: TextAlign.center,
