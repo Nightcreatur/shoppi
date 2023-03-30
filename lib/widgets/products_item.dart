@@ -30,7 +30,7 @@ class ProductItem extends StatelessWidget {
       },
       child: GridTile(
         footer: GridTileBar(
-            backgroundColor: Color.fromARGB(134, 34, 33, 33),
+            backgroundColor: const Color.fromARGB(134, 34, 33, 33),
             leading: Consumer<Product>(
               builder: (context, value, child) => IconButton(
                 color: Colors.orange,
