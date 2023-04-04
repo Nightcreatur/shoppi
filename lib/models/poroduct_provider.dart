@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shopping_app/models/product.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ProductProvider with ChangeNotifier {
   final List<Product> _item = [
@@ -49,15 +51,42 @@ class ProductProvider with ChangeNotifier {
     return _item.where((prodItem) => prodItem.isFavourite).toList();
   }
 
-  void addProduct(Product product) {
-    final newProduct = Product(
-      id: DateTime.now().toString(),
-      title: product.title,
-      description: product.description,
-      price: product.price,
-      imageUrl: product.imageUrl,
-    );
-    _item.add(newProduct);
+  void updateProduct(String id, Product newProduct) {
+    final prodIndex = _item.indexWhere((element) => element.id == id);
+    _item[prodIndex] = newProduct;
     notifyListeners();
+  }
+
+  void deleteProduct(String id) {
+    _item.removeWhere((element) => element.id == id);
+    notifyListeners();
+  }
+
+  Future<void> addProduct(Product product) {
+    final url = Uri.https(
+        'flutter-shop-8f476-default-rtdb.firebaseio.com', '/products');
+    return http
+        .post(url,
+            body: json.encode({
+              'title': product.title,
+              'description': product.description,
+              'price': product.price,
+              'imageUrl': product.imageUrl,
+              'isFavourite': product.isFavourite
+            }))
+        .then((value) {
+      final newProduct = Product(
+        id: json.decode(value.body)['name'],
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl,
+      );
+      _item.add(newProduct);
+      notifyListeners();
+    }).catchError((error) {
+      print(error);
+      throw error;
+    });
   }
 }

@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class Badge extends StatelessWidget {
@@ -22,7 +24,6 @@ class Badge extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
                 color: color != null ? color : Theme.of(context).accentColor),
             constraints: const BoxConstraints(minHeight: 16, minWidth: 16),
-            // ignore: prefer_const_constructors
             child: Text(
               value,
               textAlign: TextAlign.center,
