@@ -62,7 +62,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
     super.didChangeDependencies();
   }
 
-  void saveForm() {
+  Future<void> saveForm() async {
     final isValid = form.currentState!.validate();
     if (!isValid) {
       return;
@@ -79,30 +79,33 @@ class _EditProductScreenState extends State<EditProductScreen> {
       });
       Navigator.of(context).pop();
     } else {
-      Provider.of<ProductProvider>(context, listen: false)
-          .addProduct(editedProduct)
-          .catchError((error) {
-        return showDialog(
-            context: context,
-            builder: ((context) => AlertDialog(
-                  title: const Text('Error'),
-                  content: const Text('Something went worng!'),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('Okay'))
-                  ],
-                )));
-      }).then(
-        (value) {
-          setState(() {
-            isLoading = false;
-          });
-          Navigator.of(context).pop();
-        },
-      );
+      try {
+        await Provider.of<ProductProvider>(context, listen: false)
+            .addProduct(editedProduct);
+      } catch (e) {
+        await showDialog(
+          context: context,
+          builder: ((context) => AlertDialog(
+                title: const Text('Error'),
+                content: const Text('Something went worng!'),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        setState(() {
+                          isInit = false;
+                        });
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Okay'))
+                ],
+              )),
+        );
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.of(context).pop();
+      }
     }
   }
 

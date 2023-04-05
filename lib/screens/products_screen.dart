@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_app/models/cart.dart';
+import 'package:shopping_app/models/poroduct_provider.dart';
 import 'package:shopping_app/screens/cart_screen.dart';
 import 'package:shopping_app/screens/side_drawer.dart';
 import 'package:shopping_app/widgets/badge.dart';
@@ -20,6 +21,47 @@ class Products extends StatefulWidget {
 
 class _ProductsState extends State<Products> {
   bool isFavourite = false;
+  bool isLoading = false;
+  bool isInit = true;
+
+  @override
+  void didChangeDependencies() {
+    if (isInit) {
+      setState(() {
+        isLoading = true;
+      });
+      Provider.of<ProductProvider>(
+        context,
+      ).fetchAndGetProducts().then((_) {
+        setState(() {
+          isLoading = false;
+        });
+      });
+    }
+    isInit = false;
+    super.didChangeDependencies();
+  }
+
+  // @override
+  // void initState() {
+  //   if (isInit) {
+  //     setState(() {
+  //       isLoading = true;
+  //     });
+  //   }
+  //   Future.delayed(Duration.zero).then(
+  //     (_) => Provider.of<ProductProvider>(context, listen: false)
+  //         .fetchAndGetProducts()
+  //         .then((value) {
+  //       setState(() {
+  //         isLoading = false;
+  //       });
+  //     }),
+  //   );
+  //   isInit = false;
+  //   super.initState();
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,9 +106,13 @@ class _ProductsState extends State<Products> {
           )
         ],
       ),
-      body: ProductsGrid(
-        isFavourite: isFavourite,
-      ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : ProductsGrid(
+              isFavourite: isFavourite,
+            ),
       drawer: const SideDrawer(),
     );
   }
