@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shopping_app/exception/http_exception.dart';
 import 'package:shopping_app/models/product.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -69,13 +70,20 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  void deleteProduct(String id) {
-    _item.removeWhere((element) => element.id == id);
+  Future<void> deleteProduct(String id) async {
     final url = Uri.https(
         'flutter-shop-8f476-default-rtdb.firebaseio.com', '/products/$id.json');
-    http.delete(url);
-    _item.removeWhere((prod) => prod.id == id);
+    final existingProductIndex = _item.indexWhere((prod) => prod.id == id);
+    Product? existingProduct = _item[existingProductIndex];
+    _item.removeAt(existingProductIndex);
     notifyListeners();
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      _item.insert(existingProductIndex, existingProduct);
+      notifyListeners();
+      throw HttpException('Failed to delete !');
+    }
+    existingProduct = null;
   }
 
   Future<void> fetchAndGetProducts() async {
@@ -83,8 +91,12 @@ class ProductProvider with ChangeNotifier {
         'flutter-shop-8f476-default-rtdb.firebaseio.com', '/products.json');
     try {
       final response = await http.get(url);
-      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+
+      final extractedData = json.decode(response.body) as Map<String, dynamic>?;
       final List<Product> loadedProduct = [];
+      if (extractedData == null) {
+        return;
+      }
       extractedData.forEach((prodId, prodDaat) {
         loadedProduct.add(Product(
             id: prodId,
