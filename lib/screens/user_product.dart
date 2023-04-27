@@ -12,12 +12,12 @@ class UserProductScreen extends StatelessWidget {
 
   Future<void> refreshProducts(BuildContext context) async {
     await Provider.of<ProductProvider>(context, listen: false)
-        .fetchAndGetProducts();
+        .fetchAndGetProducts(true);
   }
 
   @override
   Widget build(BuildContext context) {
-    final products = Provider.of<ProductProvider>(context);
+    // final products = Provider.of<ProductProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Your Products'),
@@ -31,23 +31,33 @@ class UserProductScreen extends StatelessWidget {
         ],
       ),
       drawer: const SideDrawer(),
-      body: RefreshIndicator(
-        onRefresh: () => refreshProducts(context),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: ListView.builder(
-            itemBuilder: ((context, index) => Column(
-                  children: [
-                    UserProductData(
-                        id: products.items[index].id,
-                        imageUrl: products.items[index].imageUrl,
-                        title: products.items[index].title),
-                    const Divider(),
-                  ],
-                )),
-            itemCount: products.items.length,
-          ),
-        ),
+      body: FutureBuilder(
+        future: refreshProducts(context),
+        builder: (context, snapshot) =>
+            snapshot.connectionState == ConnectionState.waiting
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : RefreshIndicator(
+                    onRefresh: () => refreshProducts(context),
+                    child: Consumer<ProductProvider>(
+                      builder: (context, products, _) => Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: ListView.builder(
+                          itemBuilder: ((context, index) => Column(
+                                children: [
+                                  UserProductData(
+                                      id: products.items[index].id,
+                                      imageUrl: products.items[index].imageUrl,
+                                      title: products.items[index].title),
+                                  const Divider(),
+                                ],
+                              )),
+                          itemCount: products.items.length,
+                        ),
+                      ),
+                    ),
+                  ),
       ),
     );
   }

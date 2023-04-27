@@ -137,6 +137,7 @@ class _AuthCardsState extends State<AuthCards> {
           _authData['email']!,
           _authData['password']!,
         );
+
         // Log user in
       } else {
         // Sign user up

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shopping_app/models/auth.dart';
 import 'package:shopping_app/screens/order_screen.dart';
 import 'package:shopping_app/screens/user_product.dart';
 
@@ -35,6 +37,16 @@ class SideDrawer extends StatelessWidget {
             onTap: () {
               Navigator.of(context)
                   .pushReplacementNamed(UserProductScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.exit_to_app),
+            title: const Text('Logout'),
+            onTap: () {
+              Navigator.of(context).pop();
+              Provider.of<Auth>(context, listen: false).logout();
+              // Navigator.of(context)
+              //     .pushReplacementNamed(UserProductScreen.routeName);
             },
           ),
         ],

@@ -40,9 +40,9 @@ class _OrderScreenState extends State<OrderScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              itemCount: orderData.orders.length,
+              itemCount: orderData.orders!.length,
               itemBuilder: ((context, index) => OrderItem(
-                    order: orderData.orders[index],
+                    order: orderData.orders![index],
                   )),
             ),
       drawer: const SideDrawer(),

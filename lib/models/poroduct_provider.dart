@@ -52,11 +52,17 @@ class ProductProvider with ChangeNotifier {
     return _item.where((prodItem) => prodItem.isFavourite).toList();
   }
 
+  String? authToken;
+  String? userId;
+  ProductProvider(this.authToken, this._item, this.userId);
+
   Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _item.indexWhere((element) => element.id == id);
     if (prodIndex >= 0) {
-      final url = Uri.https('flutter-shop-8f476-default-rtdb.firebaseio.com',
-          '/products/$id.json');
+      final url = Uri.https(
+        'flutter-shop-8f476-default-rtdb.firebaseio.com',
+        '/products/$id.json?auth=$authToken',
+      );
       http.patch(url,
           body: json.encode({
             'title': newProduct.title,
@@ -72,7 +78,10 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> deleteProduct(String id) async {
     final url = Uri.https(
-        'flutter-shop-8f476-default-rtdb.firebaseio.com', '/products/$id.json');
+      'flutter-shop-8f476-default-rtdb.firebaseio.com',
+      '/products/$id.json',
+      {'auth': authToken},
+    );
     final existingProductIndex = _item.indexWhere((prod) => prod.id == id);
     Product? existingProduct = _item[existingProductIndex];
     _item.removeAt(existingProductIndex);
@@ -86,26 +95,45 @@ class ProductProvider with ChangeNotifier {
     existingProduct = null;
   }
 
-  Future<void> fetchAndGetProducts() async {
-    final url = Uri.https(
-        'flutter-shop-8f476-default-rtdb.firebaseio.com', '/products.json');
+  Future<void> fetchAndGetProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : '';
+
+    var url = Uri.https('flutter-shop-8f476-default-rtdb.firebaseio.com',
+        '/products.json?auth=$authToken&$filterString');
+
+    // var url = Uri.https(
+    //     'flutter-shop-8f476-default-rtdb.firebaseio.com', '/products.json', {
+    //   'auth': authToken,
+    //   'orderBy': filterString,
+    // });
+
     try {
       final response = await http.get(url);
 
       final extractedData = json.decode(response.body) as Map<String, dynamic>?;
-      final List<Product> loadedProduct = [];
+
       if (extractedData == null) {
         return;
       }
+      url = Uri.https('flutter-shop-8f476-default-rtdb.firebaseio.com',
+          '/userFavourites/$userId.json?auth=$authToken');
+      final favouriteResponse = await http.get(url);
+      final favouritData = json.decode(favouriteResponse.body);
+
+      final List<Product> loadedProduct = [];
       extractedData.forEach((prodId, prodDaat) {
         loadedProduct.add(Product(
-            id: prodId,
-            title: prodDaat['title'],
-            description: prodDaat['description'],
-            price: prodDaat['price'],
-            imageUrl: prodDaat['imageUrl'],
-            isFavourite: prodDaat['isFavourite']));
+          id: prodId,
+          title: prodDaat['title'],
+          description: prodDaat['description'],
+          price: prodDaat['price'],
+          isFavourite:
+              favouritData == null ? false : favouritData[prodId] ?? false,
+          imageUrl: prodDaat['imageUrl'],
+        ));
       });
+
       _item = loadedProduct;
       notifyListeners();
     } catch (e) {
@@ -115,7 +143,9 @@ class ProductProvider with ChangeNotifier {
 
   Future<void> addProduct(Product product) async {
     final url = Uri.https(
-        'flutter-shop-8f476-default-rtdb.firebaseio.com', '/products.json');
+      'flutter-shop-8f476-default-rtdb.firebaseio.com',
+      '/products.json?auth=$authToken',
+    );
     try {
       final response = await http.post(url,
           body: json.encode({
@@ -123,7 +153,7 @@ class ProductProvider with ChangeNotifier {
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
-            'isFavourite': product.isFavourite
+            'creatorId': userId,
           }));
       final newProduct = Product(
         id: json.decode(response.body)['name'],
